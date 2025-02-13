@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
     master.vm.network "private_network", ip: "192.168.33.10"
     
     master.vm.provider "virtualbox" do |vb|
-      vb.memory = "4096"
+      vb.memory = "2048"
       vb.cpus = 2
     end
   end
@@ -30,8 +30,8 @@ Vagrant.configure("2") do |config|
       slave.vm.network "private_network", type: "dhcp"
 
       slave.vm.provider "virtualbox" do |vb|
-        vb.memory = "4096"
-        vb.cpus = 2
+        vb.memory = "1024"
+        vb.cpus = 1
       end
     end
   end
