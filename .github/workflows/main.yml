@@ -1,0 +1,21 @@
+name: Deploy Nginx Application to Kuberenetes Cluster
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy-k8s:
+    uses: Amamgbu/k8s-mono/.github/workflows/build-push-deploy.yml@main
+    with:
+      docker_registry: "docker.io"
+      docker_username: "your-docker-username"
+      docker_repository: "your-app-repo"
+      helm_chart: "./helm/nginx-chart"
+    secrets:
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
+      kubeconfig: ${{ secrets.KUBECONFIG }}

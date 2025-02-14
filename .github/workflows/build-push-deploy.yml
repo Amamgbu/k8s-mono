@@ -1,0 +1,98 @@
+name: Reusable workflow to Build, Scan, Push and Deploy Sample application to Kubernetes Cluster
+
+on:
+  workflow_call:
+    inputs:
+      docker_registry:
+        description: "Docker Registry"
+        required: true
+        type: string
+      docker_username:
+        description: "Docker Username"
+        required: true
+        type: string
+      docker_repository:
+        description: "Docker Repository Name"
+        required: true
+        type: string
+      helm_chart:
+        description: "Path to Helm Chart"
+        required: true
+        type: string
+    secrets:
+      docker_password:
+        description: "Docker Password"
+        required: true
+      kubeconfig:
+        description: "Kubeconfig for accessing the Kubernetes cluster"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Enforce least privilege for this workflow
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker Image (without pushing)
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          load: true
+          tags: |
+            ${{ inputs.docker_registry }}/${{ inputs.docker_repository }}:${{ github.ref_name }}-${{ github.sha }}
+
+  trivy-scan:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scan Docker Image using Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ inputs.docker_registry }}/${{ inputs.docker_repository }}:${{ github.ref_name }}-${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: 0 #Ignores vulnerability for this use case. However this is not ideal.
+
+  push:
+    needs: trivy-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Registry
+        run: |
+          echo "${{ secrets.docker_password }}" | docker login -u "${{ inputs.docker_username }}" --password-stdin ${{ inputs.docker_registry }}
+
+      - name: Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ inputs.docker_registry }}/${{ inputs.docker_repository }}:${{ github.ref_name }}-${{ github.sha }}
+          cache-from: type=registry,ref=${{ inputs.docker_registry }}/${{ inputs.docker_repository }}:latest #I enabled caching for faster workflow
+          cache-to: type=inline
+
+  deploy:
+    needs: push-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Kubernetes Context
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.kubeconfig }}" > $HOME/.kube/config
+
+      - name: Deploy to Kubernetes using Helm
+        run: |
+          helm upgrade --install sample-nginx-app ${{ inputs.helm_chart }} \
+            --set image.repository=${{ inputs.docker_registry }}/${{ inputs.docker_repository }} \
+            --set image.tag=${{ github.ref_name }}-${{ github.sha }} \
+            --set image.pullPolicy=Always
