@@ -79,7 +79,7 @@ jobs:
           cache-to: type=inline
 
   deploy:
-    needs: push-image
+    needs: push
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
