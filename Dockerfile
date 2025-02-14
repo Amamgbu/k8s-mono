@@ -4,13 +4,11 @@ FROM nginx:alpine
 # Setup a non-root user for security
 RUN addgroup -S nginx && adduser -S nginx -G nginx
 
-# Set working directory
+
 WORKDIR /usr/share/nginx/html
 
-# Copy application files (Ensure they are static HTML/CSS/JS)
 COPY --chown=nginx:nginx . .
 
-# Restrict permissions for security
 RUN chmod -R 755 /usr/share/nginx/html && \
     chmod -R 755 /var/cache/nginx && \
     chmod -R 755 /var/log/nginx && \
