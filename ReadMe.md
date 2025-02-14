@@ -14,6 +14,7 @@ Run the following commands to provision VMs and set up a multi-node **k3s** clus
 
 ```bash
 vagrant up
+cd ansible
 ansible-playbook -i inventory.ini install_k3s_multi_node.yml
 ```
 
