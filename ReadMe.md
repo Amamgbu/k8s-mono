@@ -4,7 +4,8 @@
 Ensure the following are installed:  
 
 - **Vagrant** → [Install Guide](https://developer.hashicorp.com/vagrant/downloads)  
-- **Ansible** → [Install Guide](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)  
+- **Ansible** → [Install Guide](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+- **Virtualbox**
 - **ACT** (for simulating GitHub Actions locally) → [Install Guide](https://github.com/nektos/act)  
 
 ---
