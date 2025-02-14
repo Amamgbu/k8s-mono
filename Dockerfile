@@ -15,7 +15,7 @@ RUN chmod -R 755 /usr/share/nginx/html && \
     chmod -R 755 /etc/nginx/conf.d
 
 # Expose port
-EXPOSE 8080
+EXPOSE 80
 
 # Use a non-root user
 USER nginx
